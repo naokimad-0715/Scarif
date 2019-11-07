@@ -1,4 +1,5 @@
 import torch
+from torchvision import models
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torchvision.datasets import MNIST
@@ -31,7 +32,26 @@ class LSTMNet(nn.Module):
 
         return output
 
-net=LSTMNet(28,256,10)
+class VGGNet(nn.Module):
+    def __init__(self):
+        super(VGGNet,self).__init__()
+        vggnet=models.vgg16(pretrained=True)
+        self.vgg=nn.Sequential(*list(vggnet.children())[:-1])
+        self.fc=nn.Linear(4096,10)
+    
+    def foward(self):
+        output=self.vgg()
+        output=self.fc()
+
+        return output
+        
+
+
+
+#net=LSTMNet(28,256,10)
+net=VGGNet()
+
+
 print("MODEL---------------------------------------------------------------------------------------------")
 print(net)
 print("--------------------------------------------------------------------------------------------------")
@@ -64,8 +84,11 @@ for epoch in range(epoch_num):
             
             data=data.to(device)
             inputs=data.view(-1,28,28).to(device)
+            
             onehot=torch.eye(10)[number].to(device)
             labels=number.to(device)
+
+            optimizer.zero_grad()
 
             with torch.set_grad_enabled(phase=="train"):
                 outputs=net(inputs)
@@ -87,4 +110,4 @@ for epoch in range(epoch_num):
 
         print("phase:{},Loss:{:.4f},Accuracy:{:.4f}".format(phase,epoch_loss,epoch_acc))
 
-torch.save(net.state_dict(),"./weight.pth")
+# torch.save(net.state_dict(),"./weight.pth")
